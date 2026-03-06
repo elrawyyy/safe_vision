@@ -5,6 +5,7 @@ import '../../../core/models/user_role.dart';
 import '../../../splash/splash_screen.dart'; // import PadlockLogoWidget from here.
 import '../widgets/shared_auth_layout.dart'; // import AnimatedPrimaryButton
 import '../../../core/utils/shake_animation_widget.dart';
+import '../../../core/services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -62,14 +63,30 @@ class _LoginScreenState extends State<LoginScreen> {
       _isLoading = true;
     });
 
-    // Simulate Network Request
-    await Future.delayed(const Duration(milliseconds: 1500));
+    final authService = AuthService();
+    final result = await authService.login(
+      _idController.text.trim(),
+      _passwordController.text.trim(),
+    );
 
     if (mounted) {
       setState(() {
         _isLoading = false;
       });
-      context.go('/employee-home');
+
+      if (result['success']) {
+        context.go('/employee-home');
+      } else {
+        _passwordShakeController.shake();
+        HapticFeedback.heavyImpact();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Login failed'),
+            backgroundColor: Colors.redAccent.shade700,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     }
   }
 
