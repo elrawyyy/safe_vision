@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import '../widgets/gradient_background.dart';
+import '../widgets/shared_auth_layout.dart';
 
 class OtpScreen extends StatefulWidget {
   const OtpScreen({super.key});
@@ -45,101 +45,111 @@ class _OtpScreenState extends State<OtpScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: GradientBackground(
-        child: SafeArea(
-          child: Center( // ✅ CENTER FIX
-            child: ConstrainedBox( // ✅ WIDTH CONSTRAINT FIX
-              constraints: const BoxConstraints(maxWidth: 420),
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    IconButton(
-                      onPressed: () => context.pop(),
-                      icon: const Icon(Icons.arrow_back),
+    return SharedAuthLayout(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 40),
+          Text(
+            'Enter OTP',
+            style: TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.w900,
+              foreground: Paint()
+                ..shader = const LinearGradient(
+                  colors: [Color(0xFF00E5FF), Color(0xFFD500F9)],
+                ).createShader(const Rect.fromLTWH(0.0, 0.0, 200.0, 70.0)),
+              shadows: [
+                Shadow(
+                  color: const Color(0xFF00E5FF).withOpacity(0.5),
+                  blurRadius: 10,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Please enter the OTP sent to your\nregistered mail',
+            style: TextStyle(
+              fontSize: 15,
+              color: Colors.grey[300],
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 40),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center, // Center items
+            children: List.generate(
+              otpLength,
+              (index) => Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 6), // Closer spacing
+                child: SizedBox(
+                  width: 50,
+                  height: 60,
+                  child: TextField(
+                    controller: controllers[index],
+                    focusNode: focusNodes[index],
+                    keyboardType: TextInputType.number,
+                    textAlign: TextAlign.center,
+                    maxLength: 1,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                    ],
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
-                    const SizedBox(height: 20),
-
-                    const Text(
-                      'Enter OTP',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
+                    decoration: InputDecoration(
+                      counterText: '',
+                      filled: true,
+                      fillColor: const Color(0xFF0B1221).withOpacity(0.85),
+                      contentPadding: EdgeInsets.zero,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(
+                            color: Colors.white.withOpacity(0.1), width: 1.5),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(
+                            color: Colors.white.withOpacity(0.1), width: 1.5),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(
+                            color: Color(0xFF00E5FF), width: 2),
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    const Text(
-                      'Please enter the OTP sent to your registered mail',
-                    ),
+                    onChanged: (value) {
+                      HapticFeedback.selectionClick();
+                      _onOtpChanged();
 
-                    const SizedBox(height: 30),
+                      if (value.isNotEmpty && index < otpLength - 1) {
+                        focusNodes[index + 1].requestFocus();
+                      }
 
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: List.generate(
-                        otpLength,
-                            (index) => SizedBox(
-                          width: 55,
-                          height: 55,
-                          child: TextField(
-                            controller: controllers[index],
-                            focusNode: focusNodes[index],
-                            keyboardType: TextInputType.number,
-                            textAlign: TextAlign.center,
-                            maxLength: 1,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                            ],
-                            decoration: const InputDecoration(
-                              counterText: '',
-                            ),
-                            onChanged: (value) {
-                              _onOtpChanged();
-
-                              if (value.isNotEmpty &&
-                                  index < otpLength - 1) {
-                                focusNodes[index + 1].requestFocus();
-                              }
-
-                              if (value.isEmpty && index > 0) {
-                                focusNodes[index - 1].requestFocus();
-                              }
-                            },
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 30),
-
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: isOtpComplete
-                            ? () => context.push('/reset-info')
-                            : null,
-                        child: const Text('Verify Code'),
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    Center(
-                      child: TextButton(
-                        onPressed: () {
-                          // TODO: resend OTP logic
-                        },
-                        child: const Text('Resend OTP'),
-                      ),
-                    ),
-                  ],
+                      if (value.isEmpty && index > 0) {
+                        focusNodes[index - 1].requestFocus();
+                      }
+                    },
+                  ),
                 ),
               ),
             ),
           ),
-        ),
+          const SizedBox(height: 50),
+          Center(
+            child: AnimatedPrimaryButton(
+              text: 'Reset password',
+              backgroundColor:
+                  const Color(0xFF00E5FF).withOpacity(0.8), // Neon cyan button
+              onPressed: () => context.push(
+                  '/reset-info'), // Active regardless for demo purposes, or tie to isOtpComplete
+            ),
+          ),
+        ],
       ),
     );
   }
